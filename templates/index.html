@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+</head>
+<body>
+    <h1>Quiz Game</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('start_quiz') }}">
+        <label for="category">Wähle eine Kategorie aus:</label>
+        <select id="category" name="category">
+            <option value="1">Geschwindigkeit</option>
+            <option value="2">Baujahr</option>
+            <option value="3">Preis</option>
+            <option value="4">Anzahl PS</option>
+        </select>
+        <button type="submit">Start Quiz</button>
+    </form>
+</body>
+</html>
