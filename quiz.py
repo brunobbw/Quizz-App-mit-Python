@@ -31,7 +31,7 @@ if existing_user:
 else:
     print(f"Willkommen als neuer Benutzer, {user_name}!")
     # Neuen Benutzer zur Datenbank hinzufügen
-    new_user_data = {"Name": user_name, "score": 0}
+    new_user_data = {"Name": user_name, "score": 0, "time": 0}
     user_collection.insert_one(new_user_data)
 
 
@@ -56,50 +56,47 @@ if selected_category.isdigit():
         print("Du hast die Kategorie Geschwindigkeit ausgewählt.")
         print("")
 
+        # Äußere Schleife für dreimalige Durchführung
+        for attempt in range(1, 4):
+            # ---------- Abschnitt Frage anzeigen ----------
 
-        # ---------- Abschnitt Frage anzeigen ----------
+            # Pipeline erstellen, um nur eine zufällige Frage zu Geschwindigkeit anzuzeigen
+            geschwindigkeit_pipeline = [
+                {
+                    "$match": {
+                        "FrageZuGeschwindigkeit": {"$exists": True}
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "FrageZuGeschwindigkeit": 1
+                    }
+                }
+            ]
 
-        # Pipeline erstellen, um nur die Frage "FrageZuGeschwindigkeit" anzuzeigen
-        speed_pipeline = [
-    {
-        "$match": {
-            "FrageZuGeschwindigkeit": "Welches Auto ist das 2 schnellste?"
-        }
-    },
-    {
-        "$project": {
-            "_id": 0,  # Exclude _id field
-            "FrageZuGeschwindigkeit": 1  # Include only FrageZuGeschwindigkeit field
-        }
-    }
-]
+            # Frage suchen
+            question = question_collection.aggregate(geschwindigkeit_pipeline).next()
 
-        # Frage suchen
-        questions = question_collection.aggregate(speed_pipeline)
-
-        for question in questions:
             print(question["FrageZuGeschwindigkeit"])
 
-        # ---------- Abschnitt Autos anzeigen ----------
+            # ---------- Abschnitt Autos anzeigen ----------
 
-        # Hier drei zufällige Autos auswählen und anzeigen
-        random_cars_pipeline = [
-            {"$sample": {"size": 3}},
-            {"$project": {"_id": 0}}
-        ]
+            # Hier drei zufällige Autos mit Geschwindigkeit auswählen und anzeigen
+            random_cars_pipeline = [
+                {"$match": {"Geschwindigkeit": {"$exists": True}}},
+                {"$sample": {"size": 3}},
+                {"$project": {"_id": 0, "Name": 1, "Geschwindigkeit": 1}}
+            ]
 
-        # Zufällige Autos suchen
-        random_cars = list(car_collection.aggregate(random_cars_pipeline))
+            # Zufällige Autos suchen
+            random_cars = list(car_collection.aggregate(random_cars_pipeline))
 
-        # Zuordnung von Zahlen zu Autos erstellen
-        car_mapping = {str(i + 1): car["Name"] for i, car in enumerate(random_cars)}
+            # Zuordnung von Zahlen zu Autos erstellen
+            car_mapping = {str(i + 1): car["Name"] for i, car in enumerate(random_cars)}
 
-        while True:
             for number, car_name in car_mapping.items():
                 print(f"{number}. {car_name}")
-
-            # Das zweitschnellste Auto finden
-            second_fastest_car = car_collection.find_one({"Geschwindigkeit": {"$eq": sorted(car["Geschwindigkeit"] for car in random_cars)[1]}}, {"_id": 0})
 
             # User Option vom Terminal einlesen
             user_choice_number = input("Wähle das Auto: ")
@@ -108,18 +105,21 @@ if selected_category.isdigit():
             if user_choice_number in car_mapping:
                 user_choice = car_mapping[user_choice_number]
 
+                # Das zweitschnellste Auto finden
+                second_fastest_car = car_collection.find_one(
+                    {"Geschwindigkeit": {"$eq": sorted(car["Geschwindigkeit"] for car in random_cars)[1]}}, {"_id": 0}) # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
+
                 if user_choice == second_fastest_car["Name"]:
                     print(f"Richtig!! Das zweitschnellste Auto ist {second_fastest_car['Name']}")
+                    print("")
 
                     # Punktestand des aktuellen Spielers erhöhen
                     user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}})
 
                 elif user_choice != second_fastest_car["Name"]:
                     print("Leider falsch... Die richtige Antwort ist:", second_fastest_car["Name"])
-
-            else:
-                print("Ungültige Auswahl. Bitte wähle eine Zahl von 1 bis 3. Versuche es erneut.")
-                print("")
+                    print("")
+        print("--------------- Das Spiel ist zu Ende! ---------------\n")
 
 
 
@@ -128,6 +128,8 @@ if selected_category.isdigit():
 
     elif selected_category == 2:
         print("Du hast die Kategorie Herstellungsjahr ausgewählt.")
+        print("")
+
 
 
 
