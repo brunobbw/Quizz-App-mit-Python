@@ -1,4 +1,5 @@
 import pymongo
+import time
 
 # Verbindung zu MongoDB herstellen (stellen Sie sicher, dass Ihr Docker-Container läuft)
 client = pymongo.MongoClient("mongodb://root:root@localhost:27017/")
@@ -58,6 +59,7 @@ if selected_category.isdigit():
 
         # Äußere Schleife für dreimalige Durchführung
         for attempt in range(1, 4):
+            start_time = time.time()    # Startzeit für den Timer
             # ---------- Abschnitt Frage anzeigen ----------
 
             # Pipeline erstellen, um nur eine zufällige Frage zu Geschwindigkeit anzuzeigen
@@ -114,12 +116,35 @@ if selected_category.isdigit():
                     print("")
 
                     # Punktestand des aktuellen Spielers erhöhen
-                    user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}})
+                    user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}}) # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
 
                 elif user_choice != second_fastest_car["Name"]:
                     print("Leider falsch... Die richtige Antwort ist:", second_fastest_car["Name"])
                     print("")
+
+            end_time = time.time()  # Endzeit für den Timer
+            time_to_play = round(end_time - start_time, 1)  # Berechnung der vergangenen Zeit und Zahl wird auf eine Nachkommastelle gerundet
+
+            # Timerwert in der Datenbank aktualisieren
+            user_collection.update_one({"Name": user_name}, {"$set": {"time": time_to_play}})
+
         print("--------------- Das Spiel ist zu Ende! ---------------\n")
+
+        # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
+        top_players_pipeline = [
+            {"$sort": {"score": -1, "time": 1}},  # Absteigend nach Punktestand sortieren, aufsteigen nach Zeit sortieren
+            {"$limit": 3},  # Ergebnisse auf die Top 3 Spieler begrenzen
+            {"$project": {"_id": 0, "Name": 1, "score": 1, "time": 1}}  # Nur Name und Punktestand anzeigen
+        ]
+
+        # Top 3 Spieler suchen und anzeigen
+        top_players = list(user_collection.aggregate(top_players_pipeline))
+
+        print("\nTop 3 Spieler:")
+        for rank, player in enumerate(top_players, start=1):
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+
+
 
 
 
