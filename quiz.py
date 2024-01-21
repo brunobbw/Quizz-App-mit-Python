@@ -29,6 +29,33 @@ existing_user = next(userStatus, None)
 
 if existing_user:
     print(f"Willkommen zurück, {user_name}!")
+    print("--------------------------------")
+    print("")
+    print("Möchtest du die Rangliste sehen?")
+    showStatistic = input("ja oder nein:")
+
+    if showStatistic == "nein":
+        print("In Ordnung! Das Spiel startet!")
+        print("")
+
+    else:
+        print("Hier die Rangliste: ")
+        # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
+        top_players_pipeline = [
+            {"$sort": {"score": -1, "time": 1}},
+            # Absteigend nach Punktestand sortieren, aufsteigen nach Zeit sortieren
+            {"$limit": 3},  # Ergebnisse auf die Top 3 Spieler begrenzen
+            {"$project": {"_id": 0, "Name": 1, "score": 1, "time": 1}}  # Nur Name und Punktestand anzeigen
+        ]
+
+        # Top 3 Spieler suchen und anzeigen
+        top_players = list(user_collection.aggregate(top_players_pipeline))
+
+        print("\nTop 3 Spieler:")
+        for rank, player in enumerate(top_players, start=1):
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+        print("")
+
 else:
     print(f"Willkommen als neuer Benutzer, {user_name}!")
     # Neuen Benutzer zur Datenbank hinzufügen
