@@ -53,7 +53,7 @@ if existing_user:
 
         print("\nTop 3 Spieler:")
         for rank, player in enumerate(top_players, start=1):
-            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - Zeit: {player['time']}Sek.")
         print("")
 
 else:
@@ -169,11 +169,7 @@ if selected_category.isdigit():
 
         print("\nTop 3 Spieler:")
         for rank, player in enumerate(top_players, start=1):
-            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
-
-
-
-
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - Zeit: {player['time']}Sek.")
 
 
 
@@ -274,7 +270,7 @@ if selected_category.isdigit():
 
         print("\nTop 3 Spieler:")
         for rank, player in enumerate(top_players, start=1):
-            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - Zeit: {player['time']}Sek.")
 
 
 
@@ -375,7 +371,7 @@ if selected_category.isdigit():
 
         print("\nTop 3 Spieler:")
         for rank, player in enumerate(top_players, start=1):
-            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - Zeit: {player['time']}Sek.")
 
 
 
@@ -475,7 +471,7 @@ if selected_category.isdigit():
 
         print("\nTop 3 Spieler:")
         for rank, player in enumerate(top_players, start=1):
-            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - {player['time']}Sek.")
+            print(f"{rank}. {player['Name']} - Punktestand: {player['score']} - Zeit: {player['time']}Sek.")
 
 
 

@@ -1,3 +1,4 @@
+
 // Wenn es diese DB nicht gibt, wird eine erstellt
 db = db.getSiblingDB('QuizGame');
 
