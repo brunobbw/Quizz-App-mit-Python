@@ -24,7 +24,6 @@ userPipeline = [
 
 # Benutzer suchen
 userStatus = user_collection.aggregate(userPipeline)
-
 existing_user = next(userStatus, None)
 
 if existing_user:
@@ -58,8 +57,10 @@ if existing_user:
 
 else:
     print(f"Willkommen als neuer Benutzer, {user_name}!")
+
     # Neuen Benutzer zur Datenbank hinzufügen
     new_user_data = {"Name": user_name, "score": 0, "time": 0}
+
     user_collection.insert_one(new_user_data)
 
 
@@ -84,9 +85,10 @@ if selected_category.isdigit():
         print("Du hast die Kategorie Geschwindigkeit ausgewählt.")
         print("")
 
-        # Äußere Schleife für dreimalige Durchführung
-        for attempt in range(1, 4):
+        # Äußere Schleife für fünfmalige Durchführung
+        for attempt in range(1, 6):
             start_time = time.time()    # Startzeit für den Timer
+
             # ---------- Abschnitt Frage anzeigen ----------
 
             # Pipeline erstellen, um nur eine Frage zu Geschwindigkeit anzuzeigen
@@ -104,7 +106,7 @@ if selected_category.isdigit():
                 }
             ]
 
-            # Frage suchen
+            # Frage speichern
             question = question_collection.aggregate(geschwindigkeit_pipeline).next()
 
             print(question["FrageZuGeschwindigkeit"])
@@ -135,33 +137,43 @@ if selected_category.isdigit():
                 user_choice = car_mapping[user_choice_number]
 
                 # Das zweitschnellste Auto finden
+                # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
                 second_fastest_car = car_collection.find_one(
-                    {"Geschwindigkeit": {"$eq": sorted(car["Geschwindigkeit"] for car in random_cars)[1]}}, {"_id": 0}) # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
+                    {"Geschwindigkeit": {"$eq": sorted(car["Geschwindigkeit"] for car in random_cars)[1]}}, {"_id": 0})
 
                 if user_choice == second_fastest_car["Name"]:
                     print(f"Richtig!! Das zweit schnellste Auto ist {second_fastest_car['Name']}")
                     print("")
 
                     # Punktestand des aktuellen Spielers erhöhen
-                    user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}}) # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
+                    # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
+                    user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}})
 
                 elif user_choice != second_fastest_car["Name"]:
                     print("Leider falsch... Die richtige Antwort ist:", second_fastest_car["Name"])
                     print("")
 
             end_time = time.time()  # Endzeit für den Timer
-            time_to_play = round(end_time - start_time, 1)  # Berechnung der vergangenen Zeit und Zahl wird auf eine Nachkommastelle gerundet
+
+            # Berechnung der vergangenen Zeit und Zahl wird auf eine Nachkommastelle gerundet
+            time_to_play = round(end_time - start_time, 1)
 
             # Timerwert in der Datenbank aktualisieren
+            # Bestätigung durch Herr Ninivaggi, dass es eine Pipeline ist, daher ist das richtig so!
             user_collection.update_one({"Name": user_name}, {"$set": {"time": time_to_play}})
 
         print("--------------- Das Spiel ist zu Ende! ---------------\n")
 
+        # Spieler Score und Time suchen und anzeigen
+        user_score = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["score"]
+        user_time = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["time"]
+        print(f"Gut gemacht {user_name}! Du hast {user_score} Punkte erreicht und {user_time} Sek. benötigt!")
+
         # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
         top_players_pipeline = [
-            {"$sort": {"score": -1, "time": 1}},  # Absteigend nach Punktestand sortieren, aufsteigen nach Zeit sortieren
+            {"$sort": {"score": -1, "time": 1}}, # Absteigend nach Punktestand sortieren, aufsteigen nach Zeit sortieren
             {"$limit": 3},  # Ergebnisse auf die Top 3 Spieler begrenzen
-            {"$project": {"_id": 0, "Name": 1, "score": 1, "time": 1}}  # Nur Name und Punktestand anzeigen
+            {"$project": {"_id": 0, "Name": 1, "score": 1, "time": 1}}  # Nur Name, Punktestand und benötigte Zeit anzeigen
         ]
 
         # Top 3 Spieler suchen und anzeigen
@@ -178,9 +190,10 @@ if selected_category.isdigit():
         print("Du hast die Kategorie Herstellungsjahr ausgewählt.")
         print("")
 
-        # Äußere Schleife für dreimalige Durchführung
-        for attempt in range(1, 4):
+        # Äußere Schleife für fünfmalige Durchführung
+        for attempt in range(1, 6):
             start_time = time.time()  # Startzeit für den Timer
+
             # ---------- Abschnitt Frage anzeigen ----------
 
             # Pipeline erstellen, um nur eine Frage zu Herstellungsjahr anzuzeigen
@@ -212,15 +225,13 @@ if selected_category.isdigit():
                 {"$project": {"_id": 0, "Name": 1, "Herstellungsjahr": 1}}
             ]
 
-            # Zufällige Autos suchen
+            # Zufällige Autos
             random_cars = list(car_collection.aggregate(random_cars_pipeline))
 
             # Pipeline erstellen, um das älteste Auto zu finden
             oldest_car_pipeline = [
                 {"$match": {"Name": {"$in": [car["Name"] for car in random_cars]}}},
-                {"$sort": {"Herstellungsjahr": 1}},
-                {"$limit": 1},
-                {"$project": {"_id": 0, "Name": 1, "Herstellungsjahr": 1}}
+                {"$sort": {"Herstellungsjahr": 1}}
             ]
 
             # Das älteste Auto finden
@@ -257,6 +268,11 @@ if selected_category.isdigit():
 
         print("--------------- Das Spiel ist zu Ende! ---------------\n")
 
+        # Spieler Score und Time suchen und anzeigen
+        user_score = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["score"]
+        user_time = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["time"]
+        print(f"Gut gemacht {user_name}! Du hast {user_score} Punkte erreicht und {user_time} Sek. benötigt!")
+
         # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
         top_players_pipeline = [
             {"$sort": {"score": -1, "time": 1}},
@@ -278,9 +294,10 @@ if selected_category.isdigit():
         print("Du hast die Kategorie Preis ausgewählt.")
         print("")
 
-        # Äußere Schleife für dreimalige Durchführung
-        for attempt in range(1, 4):
+        # Äußere Schleife für fünfmalige Durchführung
+        for attempt in range(1, 6):
             start_time = time.time()  # Startzeit für den Timer
+
             # ---------- Abschnitt Frage anzeigen ----------
 
             # Pipeline erstellen, um nur eine Frage zu Preise anzuzeigen
@@ -319,8 +336,6 @@ if selected_category.isdigit():
             mostExpensive_car_pipeline = [
                 {"$match": {"Name": {"$in": [car["Name"] for car in random_cars]}}},
                 {"$sort": {"Preis": -1}},
-                {"$limit": 1},
-                {"$project": {"_id": 0, "Name": 1, "Preis": 1}}
             ]
 
             # Das teuerste Auto finden
@@ -358,6 +373,11 @@ if selected_category.isdigit():
 
         print("--------------- Das Spiel ist zu Ende! ---------------\n")
 
+        # Spieler Score und Time suchen und anzeigen
+        user_score = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["score"]
+        user_time = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["time"]
+        print(f"Gut gemacht {user_name}! Du hast {user_score} Punkte erreicht und {user_time} Sek. benötigt!")
+
         # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
         top_players_pipeline = [
             {"$sort": {"score": -1, "time": 1}},
@@ -379,9 +399,10 @@ if selected_category.isdigit():
         print("Du hast die Kategorie Anzahl PS ausgewählt.")
         print("")
 
-        # Äußere Schleife für dreimalige Durchführung
-        for attempt in range(1, 4):
+        # Äußere Schleife für fünfmalige Durchführung
+        for attempt in range(1, 6):
             start_time = time.time()  # Startzeit für den Timer
+
             # ---------- Abschnitt Frage anzeigen ----------
 
             # Pipeline erstellen, um nur eine Frage zu Anzahl PS anzuzeigen
@@ -417,15 +438,13 @@ if selected_category.isdigit():
             random_cars = list(car_collection.aggregate(random_cars_pipeline))
 
             # Pipeline erstellen, um das schwächste Auto zu finden
-            mostPowerful_car_pipeline = [
+            weakest_car_pipeline = [
                 {"$match": {"Name": {"$in": [car["Name"] for car in random_cars]}}},
-                {"$sort": {"AnzahlPS": 1}},
-                {"$limit": 1},
-                {"$project": {"_id": 0, "Name": 1, "AnzahlPS": 1}}
+                {"$sort": {"AnzahlPS": 1}}
             ]
 
             # Das schwächste Auto finden
-            mostPowerful_car = car_collection.aggregate(mostPowerful_car_pipeline).next()
+            weakest_car = car_collection.aggregate(weakest_car_pipeline).next()
 
             # Zuordnung von Zahlen zu Autos erstellen
             car_mapping = {str(i + 1): car["Name"] for i, car in enumerate(random_cars)}
@@ -440,14 +459,14 @@ if selected_category.isdigit():
             if user_choice_number in car_mapping:
                 user_choice = car_mapping[user_choice_number]
 
-                if user_choice == mostPowerful_car["Name"]:
-                    print(f"Richtig!! Das schwächste Auto ist {mostPowerful_car['Name']}")
+                if user_choice == weakest_car["Name"]:
+                    print(f"Richtig!! Das schwächste Auto ist {weakest_car['Name']}")
                     print("")
 
                     # Punktestand des aktuellen Spielers erhöhen
                     user_collection.update_one({"Name": user_name}, {"$inc": {"score": 1}})
                 else:
-                    print(f"Leider falsch... Die richtige Antwort ist: {mostPowerful_car['Name']}")
+                    print(f"Leider falsch... Die richtige Antwort ist: {weakest_car['Name']}")
                     print("")
 
             end_time = time.time()  # Endzeit für den Timer
@@ -457,6 +476,11 @@ if selected_category.isdigit():
             user_collection.update_one({"Name": user_name}, {"$set": {"time": time_to_play}})
 
         print("--------------- Das Spiel ist zu Ende! ---------------\n")
+
+        # Spieler Score und Time suchen und anzeigen
+        user_score = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["score"]
+        user_time = user_collection.find_one({"Name": user_name}, {"_id": 0, "score": 1, "time": 1})["time"]
+        print(f"Gut gemacht {user_name}! Du hast {user_score} Punkte erreicht und {user_time} Sek. benötigt!")
 
         # Pipeline erstellen, um die Top 3 Spieler nach dem Punktestand zu sortieren
         top_players_pipeline = [
